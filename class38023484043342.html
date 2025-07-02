@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="clothShopApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloth Shopping</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body class="bg-black min-h-screen text-gray-100 transition duration-300" ng-controller="MainCtrl">
+  <div id="root" class="min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-purple-800 text-white px-4 py-3 flex items-center justify-between border-b border-purple-900 shadow text-sm rounded-b-2xl relative z-20">
+      <div class="font-bold text-lg rounded-xl px-3 py-1 bg-purple-900">ClothShop</div>
+      <button class="md:hidden flex items-center" ng-click="mobileNavOpen = !mobileNavOpen">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path ng-if="!mobileNavOpen" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          <path ng-if="mobileNavOpen" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <div class="hidden md:flex items-center gap-2 flex-wrap">
+        <button ng-class="navBtn('home')" ng-click="setPage('home')">Home</button>
+        <button ng-class="navBtn('about')" ng-click="setPage('about')">About</button>
+        <button ng-class="navBtn('all')" ng-click="setPage('all')">All Items</button>
+        <button ng-class="navBtn('newarrivals')" ng-click="setPage('newarrivals')">New Arrivals</button>
+        <div class="relative inline-block" ng-mouseleave="dropdownOpen=false">
+          <button ng-class="navBtn('categories')" class="flex items-center" ng-click="dropdownOpen=!dropdownOpen">
+            Categories
+            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div ng-show="dropdownOpen" class="absolute right-0 mt-2 w-40 bg-purple-800 text-white shadow z-10 border border-purple-900 rounded-xl">
+            <button ng-repeat="cat in categories"
+              class="block w-full text-left px-4 py-2 bg-purple-800 border-b border-purple-900 hover:bg-black rounded-xl text-xs"
+              ng-click="setPage(cat); dropdownOpen=false">{{cat}}</button>
+          </div>
+        </div>
+        <button ng-class="navBtn('cart')" class="relative flex items-center" ng-click="setPage('cart')">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Cart
+          <span ng-if="cart.length" class="ml-2 bg-purple-950 text-white rounded-full px-2 py-0.5 text-xs">{{cart.length}}</span>
+        </button>
+        <button ng-if="!isLoggedIn" ng-class="navBtn('login')" ng-click="setPage('login')">Login</button>
+        <button ng-if="!isLoggedIn" ng-class="navBtn('register')" ng-click="setPage('register')">Register</button>
+        <button ng-if="isLoggedIn" ng-class="navBtn('profile')" class="rounded-full flex items-center" ng-click="setPage('profile')" title="Profile">
+          <img ng-src="{{profilePic}}" alt="Profile" class="w-7 h-7 rounded-full object-cover border-2 border-white" />
+        </button>
+      </div>
+      <!-- Mobile Nav -->
+      <div ng-show="mobileNavOpen" class="absolute top-full left-0 w-full bg-purple-900 flex flex-col gap-1 py-2 px-4 md:hidden z-30">
+        <button ng-class="navBtn('home')" ng-click="setPage('home'); mobileNavOpen=false">Home</button>
+        <button ng-class="navBtn('about')" ng-click="setPage('about'); mobileNavOpen=false">About</button>
+        <button ng-class="navBtn('all')" ng-click="setPage('all'); mobileNavOpen=false">All Items</button>
+        <button ng-class="navBtn('newarrivals')" ng-click="setPage('newarrivals'); mobileNavOpen=false">New Arrivals</button>
+        <div>
+          <button class="flex items-center w-full" ng-click="dropdownOpenMobile=!dropdownOpenMobile">
+            Categories
+            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div ng-show="dropdownOpenMobile" class="pl-4">
+            <button ng-repeat="cat in categories"
+              class="block w-full text-left px-2 py-1 bg-purple-900 border-b border-purple-800 hover:bg-black rounded-xl text-xs"
+              ng-click="setPage(cat); dropdownOpenMobile=false; mobileNavOpen=false">{{cat}}</button>
+          </div>
+        </div>
+        <button ng-class="navBtn('cart')" class="flex items-center" ng-click="setPage('cart'); mobileNavOpen=false">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Cart
+          <span ng-if="cart.length" class="ml-2 bg-purple-950 text-white rounded-full px-2 py-0.5 text-xs">{{cart.length}}</span>
+        </button>
+        <button ng-if="!isLoggedIn" ng-class="navBtn('login')" ng-click="setPage('login'); mobileNavOpen=false">Login</button>
+        <button ng-if="!isLoggedIn" ng-class="navBtn('register')" ng-click="setPage('register'); mobileNavOpen=false">Register</button>
+        <button ng-if="isLoggedIn" ng-class="navBtn('profile')" class="rounded-full flex items-center" ng-click="setPage('profile'); mobileNavOpen=false" title="Profile">
+          <img ng-src="{{profilePic}}" alt="Profile" class="w-7 h-7 rounded-full object-cover border-2 border-white" />
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 max-w-7xl mx-auto w-full">
+      <!-- Home Page -->
+      <section ng-show="currentPage==='home'" class="space-y-6 rounded-2xl bg-gray-900 p-6 shadow border border-purple-900">
+        <h1 class="text-2xl font-bold mb-4 text-purple-400">Welcome to ClothShop</h1>
+        <p class="text-purple-200 leading-relaxed">
+          Discover a world of style at ClothShop. From elegant evening wear to casual comfort, we bring you the best in fashion.
+          Our clothes are crafted with care, ensuring every piece makes a statement.
+          Whether you're dressing for a special event or lounging at home, you'll find the perfect outfit here.
+          <span class="font-bold text-purple-400"> Explore our new arrivals</span> to keep your wardrobe fresh, and check out seasonal deals that save big.
+          Quality, affordability, and style come together in every stitch.
+          <img src="https://picsum.photos/seed/featured1/600/200" class="my-4 rounded-2xl shadow" alt="Highlight Image 1" />
+          Our range includes sizes for all body types, because fashion is for everyone.
+          Love bold colors? Prefer timeless neutrals? We’ve got it.
+          <img src="https://picsum.photos/seed/featured2/600/200" class="my-4 rounded-2xl shadow" alt="Highlight Image 2" />
+          Shop with ease and confidence—our secure checkout and fast shipping make it simple.
+          Let your personality shine through the clothes you wear.
+          At ClothShop, we believe looking good should feel even better.
+        </p>
+      </section>
+
+      <!-- About Page -->
+      <section ng-show="currentPage==='about'" class="space-y-6 rounded-2xl bg-gray-900 p-6 shadow max-w-2xl mx-auto mt-6 border border-purple-900">
+        <h1 class="text-2xl font-bold mb-4 text-purple-400">About ClothShop</h1>
+        <p class="text-purple-200 leading-relaxed">
+          ClothShop is your one-stop destination for the latest trends and timeless classics in fashion. 
+          Our mission is to provide high-quality, affordable clothing for everyone. 
+          We believe in inclusivity, sustainability, and making fashion accessible to all. 
+          Our team carefully curates each collection to ensure you find something you love, every season.
+        </p>
+        <p class="text-purple-200 leading-relaxed">
+          Thank you for choosing ClothShop. We are committed to excellent customer service and a seamless shopping experience.
+        </p>
+      </section>
+
+      <!-- New Arrivals Page -->
+      <section ng-show="currentPage==='newarrivals'" class="space-y-6 rounded-2xl bg-gray-900 p-6 shadow max-w-3xl mx-auto mt-6 border border-purple-900">
+        <h1 class="text-2xl font-bold mb-4 text-purple-400">New Arrivals</h1>
+        <div class="w-full flex flex-col items-center">
+          <div class="flex overflow-x-auto no-scrollbar snap-x snap-mandatory w-full max-w-xl mx-auto" style="scroll-behavior:smooth;" id="carousel">
+            <div ng-repeat="img in newArrivalsImages track by $index"
+              class="flex-shrink-0 w-40 h-40 mx-2 snap-center rounded-xl overflow-hidden bg-gray-800 border border-purple-900 shadow-lg transition-transform duration-300 hover:scale-105">
+              <img ng-src="{{img}}" alt="New Arrival {{$index+1}}" class="w-full h-full object-cover" draggable="false" />
+            </div>
+          </div>
+          <div class="flex justify-center mt-4 gap-2">
+            <button ng-repeat="img in newArrivalsImages track by $index"
+              class="w-3 h-3 rounded-full"
+              ng-class="{'bg-purple-500': carouselIndex==$index, 'bg-gray-700': carouselIndex!=$index}"
+              ng-click="setCarouselIndex($index)"></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- All Items or Category Page -->
+      <section ng-show="(currentPage==='all' || categories.indexOf(currentPage)!==-1)" class="space-y-4">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl font-semibold text-purple-400">
+            {{currentPage==='all' ? 'All Items' : currentPage}}
+          </h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          <div ng-repeat="card in displayCards()" class="bg-gray-900 shadow border border-purple-900 flex flex-col h-full rounded-2xl overflow-hidden transform transition-transform hover:scale-105 hover:shadow-2xl">
+            <div class="relative w-full aspect-square rounded-t-2xl overflow-hidden flex-shrink-0">
+              <img ng-src="{{card.image}}" alt="{{card.title}}" class="w-full h-full object-cover object-center" draggable="false" style="pointer-events: none; display: block;" />
+            </div>
+            <div class="p-2 flex flex-col flex-grow">
+              <div class="font-semibold text-xs mb-1 text-purple-300 truncate">{{card.title}}</div>
+              <div class="text-purple-400 text-xs mb-1 truncate">{{card.description}}</div>
+              <div class="text-xs"><span class="font-medium text-purple-400">Price:</span> ${{card.price}}</div>
+              <div class="text-xs"><span class="font-medium text-purple-400">Size:</span> {{card.size}}</div>
+              <button class="mt-2 bg-purple-700 text-white text-xs px-2 py-1 border border-purple-900 hover:bg-black rounded-xl"
+                ng-click="addToCart(card)">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cart Page -->
+      <section ng-show="currentPage==='cart' && !showPayment" class="fixed top-24 right-8 w-full max-w-md bg-gray-900 rounded-2xl shadow-lg p-8 z-40 border border-purple-900">
+        <h2 class="text-xl font-semibold text-purple-400 mb-2">Your Cart</h2>
+        <div ng-if="!cart.length" class="text-purple-600">Your cart is empty.</div>
+        <div ng-if="cart.length">
+          <div class="grid grid-cols-1 gap-4">
+            <div ng-repeat="item in cart track by $index" class="bg-gray-900 shadow border border-purple-900 flex flex-row items-center rounded-2xl overflow-hidden">
+              <img ng-src="{{item.image}}" alt="{{item.title}}" class="w-16 h-16 object-cover rounded-l-2xl" draggable="false" style="pointer-events: none;" />
+              <div class="p-2 flex flex-col flex-grow">
+                <div class="font-semibold text-xs mb-1 text-purple-200 truncate">{{item.title}}</div>
+                <div class="text-xs"><span class="font-medium text-purple-400">Price:</span> ${{item.price}}</div>
+              </div>
+              <button class="ml-2 bg-red-700 text-white text-xs px-2 py-1 border border-red-800 hover:bg-black rounded-xl"
+                ng-click="removeFromCart($index)">Remove</button>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button class="mt-4 bg-purple-700 text-white px-4 py-1 rounded-xl hover:bg-purple-800 text-xs"
+              ng-click="showPayment=true">Proceed to Payment</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Payment Page -->
+      <section ng-show="showPayment" class="fixed top-24 right-8 w-full max-w-md bg-gray-900 rounded-2xl shadow-lg p-8 z-50 border border-purple-900">
+        <h2 class="text-2xl font-bold text-purple-400 mb-6 text-center">Payment</h2>
+        <div class="mb-6">
+          <div class="bg-gradient-to-r from-yellow-400 to-red-500 rounded-2xl p-4 flex items-center shadow mb-4">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="Mastercard" class="w-12 h-8 rounded mr-4 bg-white p-1" />
+            <div class="flex-1">
+              <div class="text-xs text-gray-700">Card Number</div>
+              <div class="font-mono text-lg tracking-widest text-gray-900">{{paymentInfo.cardNumber || "**** **** **** ****"}}</div>
+            </div>
+          </div>
+          <form name="payForm" novalidate ng-submit="pay()">
+            <div>
+              <label class="block text-xs font-medium text-purple-200 mb-1">Mastercard Number</label>
+              <input type="text" maxlength="19" inputmode="numeric" pattern="[0-9 ]*" class="w-full px-3 py-2 border border-purple-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 bg-black text-white"
+                placeholder="1234 5678 9012 3456" ng-model="paymentInfo.cardNumber" ng-change="paymentInfo.cardNumber=paymentInfo.cardNumber.replace(/[^0-9 ]/g,'')" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-purple-200 mb-1">PIN Code</label>
+              <input type="password" maxlength="4" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border border-purple-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 bg-black text-white"
+                placeholder="****" ng-model="paymentInfo.pin" ng-change="paymentInfo.pin=paymentInfo.pin.replace(/[^0-9]/g,'')" required />
+            </div>
+            <div class="text-red-400 text-xs" ng-if="paymentError">{{paymentError}}</div>
+            <div class="flex justify-between mt-6">
+              <button type="button" class="bg-gray-700 text-gray-200 px-3 py-1 rounded-xl hover:bg-gray-600 text-xs"
+                ng-click="showPayment=false">Back</button>
+              <button type="submit" class="bg-purple-700 text-white px-4 py-1 rounded-xl hover:bg-purple-800 text-xs">Pay Now</button>
+            </div>
+          </form>
+        </div>
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold text-purple-400 mb-2">Cart Summary</h3>
+          <ul class="divide-y divide-purple-900 rounded-xl bg-purple-950 p-3">
+            <li ng-repeat="item in cart track by $index" class="py-2 flex justify-between items-center">
+              <span class="text-xs text-purple-200">{{item.title}}</span>
+              <span class="text-xs text-purple-400 font-semibold">${{item.price}}</span>
+            </li>
+          </ul>
+          <div class="text-right mt-2 text-purple-200 font-bold">
+            Total: ${{cart.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2)}}
+          </div>
+        </div>
+      </section>
+
+      <!-- Payment Success -->
+      <section ng-show="paymentSuccess" class="fixed top-24 right-8 w-full max-w-md bg-green-950 rounded-2xl shadow-lg p-8 text-center z-50 border border-green-800">
+        <svg class="mx-auto mb-4 w-16 h-16 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        <h2 class="text-2xl font-bold text-green-400 mb-2">Payment Successful!</h2>
+        <p class="text-green-200 mb-4">Thank you for your purchase. Your order has been placed.</p>
+        <button class="bg-purple-700 text-white px-4 py-1 rounded-xl hover:bg-purple-800 text-xs"
+          ng-click="resetPayment()">Back to Home</button>
+      </section>
+
+      <!-- Login Page -->
+      <section ng-show="currentPage==='login'" class="flex justify-center items-center min-h-[60vh]">
+        <form class="bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-xs space-y-4 border border-purple-900"
+          ng-submit="login()">
+          <h2 class="text-xl font-bold text-purple-400 mb-2 text-center">Login</h2>
+          <input type="email" class="w-full px-3 py-2 border border-purple-700 rounded-xl text-xs bg-black text-white"
+            placeholder="Email" ng-model="loginEmail" required />
+          <input type="password" class="w-full px-3 py-2 border border-purple-700 rounded-xl text-xs bg-black text-white"
+            placeholder="Password" ng-model="loginPassword" required />
+          <button type="submit" class="w-full bg-purple-700 text-white py-2 rounded-xl hover:bg-purple-800 text-xs">Login</button>
+        </form>
+      </section>
+
+      <!-- Register Page -->
+      <section ng-show="currentPage==='register'" class="flex justify-center items-center min-h-[60vh]">
+        <form class="bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-xs space-y-4 border border-purple-900">
+          <h2 class="text-xl font-bold text-purple-400 mb-2 text-center">Register</h2>
+          <input type="email" class="w-full px-3 py-2 border border-purple-700 rounded-xl text-xs bg-black text-white"
+            placeholder="Email" ng-model="registerEmail" required />
+          <input type="password" class="w-full px-3 py-2 border border-purple-700 rounded-xl text-xs bg-black text-white"
+            placeholder="Password" ng-model="registerPassword" required />
+          <input type="password" class="w-full px-3 py-2 border border-purple-700 rounded-xl text-xs bg-black text-white"
+            placeholder="Confirm Password" ng-model="registerConfirm" required />
+          <button type="submit" class="w-full bg-purple-700 text-white py-2 rounded-xl hover:bg-purple-800 text-xs">Register</button>
+        </form>
+      </section>
+
+      <!-- Profile Page -->
+      <section ng-show="currentPage==='profile'" class="bg-black min-h-screen p-6 flex flex-col items-center" id="profile">
+        <div class="w-full max-w-2xl mx-auto bg-gray-900 rounded-xl shadow-xl overflow-hidden transition-transform transform hover:scale-105 border border-purple-900">
+          <div class="relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-purple-900 via-pink-900 to-red-900 h-40 sm:h-56"></div>
+            <div class="relative sm:flex sm:items-center sm:space-x-6 p-6">
+              <div class="sm:w-1/3 flex flex-col items-center">
+                <img class="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg sm:h-40 sm:w-40"
+                  ng-src="{{profilePic}}" alt="Profile" />
+                <button class="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white py-1 px-3 rounded-lg shadow font-semibold text-xs"
+                  ng-click="editProfilePic()">Edit Picture</button>
+              </div>
+              <div class="p-6 sm:w-2/3">
+                <h2 class="text-3xl font-bold text-gray-100 mb-3">Jane Doe</h2>
+                <p class="text-gray-400 leading-relaxed mb-4 text-base">
+                  A passionate web developer with a
+                  knack for creating intuitive and engaging
+                  user experiences. Jane loves exploring
+                  new technologies and is always eager to
+                  learn and improve her skills.
+                </p>
+                <a href="#" class="inline-block bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 py-2 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 font-semibold text-xs">
+                  View Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    angular.module('clothShopApp', [])
+      .controller('MainCtrl', ['$scope', '$timeout', function($scope, $timeout) {
+        $scope.categories = [
+          "T-Shirts", "Jackets", "Shoes", "Accessories", "Dresses",
+          "Blazers", "Pants", "Hoodies", "Suits", "Swimwear", "Bags"
+        ];
+        $scope.newArrivalsImages = [
+          "https://picsum.photos/seed/na1/400/400",
+          "https://picsum.photos/seed/na2/400/400",
+          "https://picsum.photos/seed/na3/400/400",
+          "https://picsum.photos/seed/na4/400/400",
+          "https://picsum.photos/seed/na5/400/400",
+          "https://picsum.photos/seed/na6/400/400",
+          "https://picsum.photos/seed/na7/400/400",
+          "https://picsum.photos/seed/na8/400/400",
+          "https://picsum.photos/seed/na9/400/400",
+          "https://picsum.photos/seed/na10/400/400"
+        ];
+        $scope.cardImages = [
+          "https://picsum.photos/seed/tshirt1/400/400",
+          "https://picsum.photos/seed/tshirt2/400/400",
+          "https://picsum.photos/seed/jacket1/400/400",
+          "https://picsum.photos/seed/jacket2/400/400",
+          "https://picsum.photos/seed/shoes1/400/400",
+          "https://picsum.photos/seed/shoes2/400/400",
+          "https://picsum.photos/seed/accessory1/400/400",
+          "https://picsum.photos/seed/accessory2/400/400",
+          "https://picsum.photos/seed/dress1/400/400",
+          "https://picsum.photos/seed/dress2/400/400",
+          "https://picsum.photos/seed/blazer1/400/400",
+          "https://picsum.photos/seed/blazer2/400/400",
+          "https://picsum.photos/seed/pants1/400/400",
+          "https://picsum.photos/seed/pants2/400/400",
+          "https://picsum.photos/seed/hoodie1/400/400",
+          "https://picsum.photos/seed/hoodie2/400/400",
+          "https://picsum.photos/seed/suit1/400/400",
+          "https://picsum.photos/seed/suit2/400/400",
+          "https://picsum.photos/seed/swimwear1/400/400",
+          "https://picsum.photos/seed/swimwear2/400/400",
+          "https://picsum.photos/seed/bag1/400/400",
+          "https://picsum.photos/seed/bag2/400/400"
+        ];
+        $scope.cards = [];
+        $scope.categories.forEach(function(category, catIdx) {
+          for (let i = 0; i < 4; i++) {
+            $scope.cards.push({
+              id: category + '-' + i,
+              title: category + ' Item ' + (i + 1),
+              description: 'High quality ' + category.toLowerCase() + ' for every occasion.',
+              price: (20 + (catIdx * 4 + i) * 5).toFixed(2),
+              size: ["S", "M", "L", "XL"][(catIdx * 4 + i) % 4],
+              section: category,
+              image: $scope.cardImages[(catIdx * 4 + i) % $scope.cardImages.length],
+              link: '#' + category.toLowerCase().replace(/\s/g, '-') + '-item-' + (i + 1)
+            });
+          }
+        });
+
+        $scope.currentPage = 'home';
+        $scope.cart = [];
+        $scope.dropdownOpen = false;
+        $scope.dropdownOpenMobile = false;
+        $scope.mobileNavOpen = false;
+        $scope.isLoggedIn = false;
+        $scope.profilePic = "https://randomuser.me/api/portraits/women/44.jpg";
+        $scope.showPayment = false;
+        $scope.paymentInfo = { cardNumber: '', pin: '' };
+        $scope.paymentError = '';
+        $scope.paymentSuccess = false;
+        $scope.carouselIndex = 0;
+
+        // Carousel auto-scroll
+        let carouselInterval;
+        function startCarousel() {
+          if (carouselInterval) clearInterval(carouselInterval);
+          carouselInterval = setInterval(function() {
+            $scope.carouselIndex = ($scope.carouselIndex + 1) % $scope.newArrivalsImages.length;
+            $scope.$applyAsync();
+            scrollCarousel();
+          }, 3000);
+        }
+        function scrollCarousel() {
+          $timeout(function() {
+            var el = document.getElementById('carousel');
+            if (el) el.scrollTo({ left: $scope.carouselIndex * 176, behavior: "smooth" });
+          }, 0);
+        }
+        $scope.setCarouselIndex = function(idx) {
+          $scope.carouselIndex = idx;
+          scrollCarousel();
+        };
+        $scope.$watch('currentPage', function(val) {
+          if (val === 'newarrivals') {
+            $timeout(function() {
+              startCarousel();
+              scrollCarousel();
+            }, 100);
+          } else {
+            if (carouselInterval) clearInterval(carouselInterval);
+          }
+        });
+
+        $scope.setPage = function(page) {
+          $scope.currentPage = page;
+          $scope.dropdownOpen = false;
+          $scope.dropdownOpenMobile = false;
+          $scope.mobileNavOpen = false;
+          $scope.showPayment = false;
+          $scope.paymentSuccess = false;
+        };
+        $scope.navBtn = function(page) {
+          let base = "bg-purple-800 px-2 py-1 border border-purple-900 hover:bg-black rounded-xl text-xs";
+          if (page === 'categories') return base + ($scope.categories.indexOf($scope.currentPage) !== -1 ? ' bg-purple-950' : '');
+          return base + ($scope.currentPage === page ? ' bg-purple-950' : '');
+        };
+        $scope.displayCards = function() {
+          if ($scope.currentPage === 'all') return $scope.cards;
+          if ($scope.categories.indexOf($scope.currentPage) !== -1)
+            return $scope.cards.filter(card => card.section === $scope.currentPage);
+          return [];
+        };
+        $scope.addToCart = function(card) {
+          $scope.cart.push(card);
+        };
+        $scope.removeFromCart = function(idx) {
+          $scope.cart.splice(idx, 1);
+        };
+        $scope.pay = function() {
+          let card = ($scope.paymentInfo.cardNumber || '').replace(/\s/g, '');
+          if (!/^5\d{15}$/.test(card)) {
+            $scope.paymentError = "Please enter a valid 16-digit Mastercard number starting with 5.";
+            return;
+          }
+          if (!/^\d{4}$/.test($scope.paymentInfo.pin)) {
+            $scope.paymentError = "Please enter a valid 4-digit PIN code.";
+            return;
+          }
+          $scope.paymentError = '';
+          $scope.paymentSuccess = true;
+          $scope.cart = [];
+          $scope.showPayment = false;
+          $scope.paymentInfo = { cardNumber: '', pin: '' };
+        };
+        $scope.resetPayment = function() {
+          $scope.paymentSuccess = false;
+          $scope.currentPage = 'home';
+        };
+        $scope.login = function() {
+          $scope.isLoggedIn = true;
+          $scope.currentPage = 'home';
+        };
+        $scope.editProfilePic = function() {
+          alert("Profile picture editing is not implemented in this demo.");
+        };
+      }]);
+  </script>
+</body>
+</html>

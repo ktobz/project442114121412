@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloth Shopping</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-white min-h-screen text-gray-900 transition duration-300">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const categories = [
+      "T-Shirts", "Jackets", "Shoes", "Accessories", "Dresses",
+      "Blazers", "Pants", "Hoodies", "Suits", "Swimwear", "Bags"
+    ];
+
+    const cardImages = [
+      "https://picsum.photos/seed/tshirt1/400/400",
+      "https://picsum.photos/seed/tshirt2/400/400",
+      "https://picsum.photos/seed/jacket1/400/400",
+      "https://picsum.photos/seed/jacket2/400/400",
+      "https://picsum.photos/seed/shoes1/400/400",
+      "https://picsum.photos/seed/shoes2/400/400",
+      "https://picsum.photos/seed/accessory1/400/400",
+      "https://picsum.photos/seed/accessory2/400/400",
+      "https://picsum.photos/seed/dress1/400/400",
+      "https://picsum.photos/seed/dress2/400/400",
+      "https://picsum.photos/seed/blazer1/400/400",
+      "https://picsum.photos/seed/blazer2/400/400",
+      "https://picsum.photos/seed/pants1/400/400",
+      "https://picsum.photos/seed/pants2/400/400",
+      "https://picsum.photos/seed/hoodie1/400/400",
+      "https://picsum.photos/seed/hoodie2/400/400",
+      "https://picsum.photos/seed/suit1/400/400",
+      "https://picsum.photos/seed/suit2/400/400",
+      "https://picsum.photos/seed/swimwear1/400/400",
+      "https://picsum.photos/seed/swimwear2/400/400",
+      "https://picsum.photos/seed/bag1/400/400",
+      "https://picsum.photos/seed/bag2/400/400"
+    ];
+
+    const cards = categories.flatMap((category, catIdx) =>
+      Array.from({ length: 4 }, (_, i) => ({
+        id: `${category}-${i}`,
+        title: `${category} Item ${i + 1}`,
+        description: `High quality ${category.toLowerCase()} for every occasion.`,
+        price: (20 + (catIdx * 4 + i) * 5).toFixed(2),
+        size: ["S", "M", "L", "XL"][(catIdx * 4 + i) % 4],
+        section: category,
+        image: cardImages[(catIdx * 4 + i) % cardImages.length],
+        link: `#${category.toLowerCase().replace(/\s/g, '-')}-item-${i + 1}`
+      }))
+    );
+
+    const Navbar = ({
+      currentPage,
+      setPage,
+      cartCount,
+      setDropdownOpen,
+      dropdownOpen
+    }) => (
+      <nav className="bg-purple-700 text-white px-8 py-4 flex justify-between items-center border-b border-purple-800 shadow text-sm rounded-b-2xl">
+        <div className="font-bold text-lg rounded-xl px-3 py-1 bg-purple-800">ClothShop</div>
+        <div className="flex items-center gap-6">
+          <button
+            className={`bg-purple-700 px-3 py-2 border border-purple-800 hover:bg-black transition-none rounded-xl${currentPage === 'home' ? ' bg-purple-900' : ''}`}
+            onClick={() => setPage('home')}
+          >
+            Home
+          </button>
+          <button
+            className={`bg-purple-700 px-3 py-2 border border-purple-800 hover:bg-black transition-none rounded-xl${currentPage === 'about' ? ' bg-purple-900' : ''}`}
+            onClick={() => setPage('about')}
+          >
+            About
+          </button>
+          <button
+            className={`bg-purple-700 px-3 py-2 border border-purple-800 hover:bg-black transition-none rounded-xl${currentPage === 'all' ? ' bg-purple-900' : ''}`}
+            onClick={() => setPage('all')}
+          >
+            All Items
+          </button>
+          <div className="relative inline-block">
+            <button
+              className={`bg-purple-700 px-3 py-2 flex items-center border border-purple-800 hover:bg-black transition-none rounded-xl${categories.includes(currentPage) ? ' bg-purple-900' : ''}`}
+              onClick={() => setDropdownOpen(open => !open)}
+            >
+              Categories
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            {dropdownOpen && (
+              <div
+                className="absolute right-0 mt-2 w-40 bg-purple-700 text-white shadow z-10 border border-purple-800 rounded-xl"
+                onMouseLeave={() => setDropdownOpen(false)}
+              >
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    className="block w-full text-left px-4 py-2 bg-purple-700 border-b border-purple-800 hover:bg-black transition-none rounded-xl"
+                    onClick={() => { setPage(cat); setDropdownOpen(false); }}
+                  >{cat}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            className="relative bg-purple-700 px-3 py-2 border border-purple-800 hover:bg-black transition-none rounded-xl flex items-center"
+            onClick={() => setPage('cart')}
+          >
+            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Add to Cart
+            {cartCount > 0 && (
+              <span className="ml-2 bg-purple-900 text-white rounded-full px-2 py-0.5 text-xs">{cartCount}</span>
+            )}
+          </button>
+        </div>
+      </nav>
+    );
+
+    const Card = ({ card, onAddToCart }) => (
+      <div className="bg-white shadow border border-purple-200 flex flex-col h-full rounded-2xl overflow-hidden">
+        <div className="relative w-full h-28 flex-1 rounded-t-2xl overflow-hidden">
+          <img
+            src={card.image}
+            alt={card.title}
+            className="w-full h-full object-cover"
+            draggable="false"
+            style={{ pointerEvents: 'none' }}
+          />
+        </div>
+        <div className="p-2 flex flex-col flex-grow">
+          <div className="font-semibold text-xs mb-1 text-purple-900 truncate">{card.title}</div>
+          <div className="text-purple-800 text-xs mb-1 truncate">{card.description}</div>
+          <div className="text-xs"><span className="font-medium text-purple-700">Price:</span> ${card.price}</div>
+          <div className="text-xs"><span className="font-medium text-purple-700">Size:</span> {card.size}</div>
+          <button
+            className="mt-2 bg-purple-700 text-white text-xs px-2 py-1 border border-purple-800 hover:bg-black transition-none rounded-xl"
+            onClick={() => onAddToCart(card)}
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    );
+
+    // Payment Page
+    const PaymentPage = ({ cart, onBack, onPay, paymentInfo, setPaymentInfo, error }) => (
+      <section className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-8 mt-8">
+        <h2 className="text-2xl font-bold text-purple-700 mb-6 text-center">Payment</h2>
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-yellow-400 to-red-500 rounded-2xl p-4 flex items-center shadow mb-4">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="Mastercard" className="w-12 h-8 rounded mr-4 bg-white p-1" />
+            <div className="flex-1">
+              <div className="text-xs text-gray-700">Card Number</div>
+              <div className="font-mono text-lg tracking-widest text-gray-900">{paymentInfo.cardNumber || "**** **** **** ****"}</div>
+            </div>
+          </div>
+          <form className="space-y-4" onSubmit={e => { e.preventDefault(); onPay(); }}>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Mastercard Number</label>
+              <input
+                type="text"
+                maxLength={19}
+                inputMode="numeric"
+                pattern="[0-9 ]*"
+                className="w-full px-3 py-2 border border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="1234 5678 9012 3456"
+                value={paymentInfo.cardNumber}
+                onChange={e => setPaymentInfo({ ...paymentInfo, cardNumber: e.target.value.replace(/[^\d ]/g, '') })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">PIN Code</label>
+              <input
+                type="password"
+                maxLength={4}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="w-full px-3 py-2 border border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="****"
+                value={paymentInfo.pin}
+                onChange={e => setPaymentInfo({ ...paymentInfo, pin: e.target.value.replace(/[^\d]/g, '') })}
+                required
+              />
+            </div>
+            {error && <div className="text-red-600 text-xs">{error}</div>}
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300"
+                onClick={onBack}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className="bg-purple-700 text-white px-6 py-2 rounded-xl hover:bg-purple-800"
+              >
+                Pay Now
+              </button>
+            </div>
+          </form>
+        </div>
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-purple-700 mb-2">Cart Summary</h3>
+          <ul className="divide-y divide-purple-100 rounded-xl bg-purple-50 p-3">
+            {cart.map((item, idx) => (
+              <li key={item.id + idx} className="py-2 flex justify-between items-center">
+                <span className="text-xs text-purple-900">{item.title}</span>
+                <span className="text-xs text-purple-700 font-semibold">${item.price}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="text-right mt-2 text-purple-900 font-bold">
+            Total: ${cart.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2)}
+          </div>
+        </div>
+      </section>
+    );
+
+    const CartPage = ({ cart, onRemove, onCheckout }) => (
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-purple-700 mb-2">Your Cart</h2>
+        {cart.length === 0 ? (
+          <div className="text-purple-400">Your cart is empty.</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+              {cart.map((item, idx) => (
+                <div key={item.id + idx} className="bg-white shadow border border-purple-200 flex flex-col h-full rounded-2xl overflow-hidden">
+                  <div className="relative w-full h-28 flex-1 rounded-t-2xl overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                      draggable="false"
+                      style={{ pointerEvents: 'none' }}
+                    />
+                  </div>
+                  <div className="p-2 flex flex-col flex-grow">
+                    <div className="font-semibold text-xs mb-1 text-purple-900 truncate">{item.title}</div>
+                    <div className="text-xs"><span className="font-medium text-purple-700">Price:</span> ${item.price}</div>
+                    <button
+                      className="mt-2 bg-red-700 text-white text-xs px-2 py-1 border border-red-800 hover:bg-black transition-none rounded-xl"
+                      onClick={() => onRemove(idx)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="mt-4 bg-purple-700 text-white px-6 py-2 rounded-xl hover:bg-purple-800"
+                onClick={onCheckout}
+              >
+                Proceed to Payment
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+    );
+
+    const App = () => {
+      const [currentPage, setCurrentPage] = useState('home');
+      const [dropdownOpen, setDropdownOpen] = useState(false);
+      const [cart, setCart] = useState([]);
+      const [showPayment, setShowPayment] = useState(false);
+      const [paymentInfo, setPaymentInfo] = useState({ cardNumber: '', pin: '' });
+      const [paymentError, setPaymentError] = useState('');
+      const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+      // Add to cart handler
+      const handleAddToCart = (card) => {
+        setCart([...cart, card]);
+      };
+
+      // Remove from cart handler
+      const handleRemoveFromCart = (idx) => {
+        setCart(cart.filter((_, i) => i !== idx));
+      };
+
+      // Payment handler
+      const handlePay = () => {
+        // Simple validation: Mastercard starts with 5, 16 digits, pin 4 digits
+        const card = paymentInfo.cardNumber.replace(/\s/g, '');
+        if (!/^5\d{15}$/.test(card)) {
+          setPaymentError("Please enter a valid 16-digit Mastercard number starting with 5.");
+          return;
+        }
+        if (!/^\d{4}$/.test(paymentInfo.pin)) {
+          setPaymentError("Please enter a valid 4-digit PIN code.");
+          return;
+        }
+        setPaymentError('');
+        setPaymentSuccess(true);
+        setCart([]);
+      };
+
+      // Cards to show
+      let displayCards = [];
+      if (currentPage === 'all') {
+        displayCards = cards;
+      } else if (categories.includes(currentPage)) {
+        displayCards = cards.filter(card => card.section === currentPage);
+      }
+
+      return (
+        <div>
+          <Navbar
+            currentPage={currentPage}
+            setPage={page => {
+              setCurrentPage(page);
+              setShowPayment(false);
+              setPaymentSuccess(false);
+            }}
+            cartCount={cart.length}
+            setDropdownOpen={setDropdownOpen}
+            dropdownOpen={dropdownOpen}
+          />
+          <main className="p-4 max-w-7xl mx-auto">
+            {/* Home Page */}
+            {currentPage === 'home' && (
+              <section className="space-y-6 rounded-2xl bg-purple-50 p-6 shadow">
+                <h1 className="text-2xl font-bold mb-4 text-purple-700">Welcome to ClothShop</h1>
+                <p className="text-purple-900 leading-relaxed">
+                  Discover a world of style at ClothShop. From elegant evening wear to casual comfort, we bring you the best in fashion.
+                  Our clothes are crafted with care, ensuring every piece makes a statement.
+                  Whether you're dressing for a special event or lounging at home, you'll find the perfect outfit here.
+                  <span className="font-bold text-purple-700"> Explore our new arrivals</span> to keep your wardrobe fresh, and check out seasonal deals that save big.
+                  Quality, affordability, and style come together in every stitch.
+                  <img src="https://picsum.photos/seed/featured1/600/200" className="my-4 rounded-2xl shadow" alt="Highlight Image 1" />
+                  Our range includes sizes for all body types, because fashion is for everyone.
+                  Love bold colors? Prefer timeless neutrals? We’ve got it.
+                  <img src="https://picsum.photos/seed/featured2/600/200" className="my-4 rounded-2xl shadow" alt="Highlight Image 2" />
+                  Shop with ease and confidence—our secure checkout and fast shipping make it simple.
+                  Let your personality shine through the clothes you wear.
+                  At ClothShop, we believe looking good should feel even better.
+                </p>
+              </section>
+            )}
+
+            {/* About Page */}
+            {currentPage === 'about' && (
+              <section className="space-y-6 rounded-2xl bg-purple-50 p-6 shadow">
+                <h1 className="text-2xl font-bold mb-4 text-purple-700">About ClothShop</h1>
+                <p className="text-purple-900 leading-relaxed">
+                  ClothShop is your one-stop destination for the latest trends and timeless classics in fashion. 
+                  Our mission is to provide high-quality, affordable clothing for everyone. 
+                  We believe in inclusivity, sustainability, and making fashion accessible to all. 
+                  Our team carefully curates each collection to ensure you find something you love, every season.
+                </p>
+                <p className="text-purple-900 leading-relaxed">
+                  Thank you for choosing ClothShop. We are committed to excellent customer service and a seamless shopping experience.
+                </p>
+              </section>
+            )}
+
+            {/* All Items or Category Page */}
+            {(currentPage === 'all' || categories.includes(currentPage)) && !showPayment && (
+              <section className="space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-xl font-semibold text-purple-700">
+                    {currentPage === 'all' ? 'All Items' : `${currentPage}`}
+                  </h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                  {displayCards.map(card => (
+                    <Card key={card.id} card={card} onAddToCart={handleAddToCart} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Cart Page */}
+            {currentPage === 'cart' && !showPayment && (
+              <CartPage
+                cart={cart}
+                onRemove={handleRemoveFromCart}
+                onCheckout={() => setShowPayment(true)}
+              />
+            )}
+
+            {/* Payment Page */}
+            {showPayment && (
+              paymentSuccess ? (
+                <section className="max-w-md mx-auto bg-green-50 rounded-2xl shadow-lg p-8 mt-8 text-center">
+                  <svg className="mx-auto mb-4 w-16 h-16 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <h2 className="text-2xl font-bold text-green-700 mb-2">Payment Successful!</h2>
+                  <p className="text-green-900 mb-4">Thank you for your purchase. Your order has been placed.</p>
+                  <button
+                    className="bg-purple-700 text-white px-6 py-2 rounded-xl hover:bg-purple-800"
+                    onClick={() => {
+                      setShowPayment(false);
+                      setCurrentPage('home');
+                      setPaymentInfo({ cardNumber: '', pin: '' });
+                      setPaymentSuccess(false);
+                    }}
+                  >
+                    Back to Home
+                  </button>
+                </section>
+              ) : (
+                <PaymentPage
+                  cart={cart}
+                  onBack={() => setShowPayment(false)}
+                  onPay={handlePay}
+                  paymentInfo={paymentInfo}
+                  setPaymentInfo={setPaymentInfo}
+                  error={paymentError}
+                />
+              )
+            )}
+          </main>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
